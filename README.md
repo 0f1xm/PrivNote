@@ -1,0 +1,2 @@
+# PrivNote
+Self hosted privnote
