@@ -1,5 +1,4 @@
 <?php
-//your db config
 require('../private/dbconfig.php');
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -8,7 +7,7 @@ $message = '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 30 * 1024 * 1024) { // 30 MB
-        echo json_encode(['error' => 'not bigger than 30 MB']);
+        echo json_encode(['error' => 'Die Dateigröße sollte nicht größer als 30 MB sein.']);
         exit;
     }
 
@@ -37,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $deleteStmt = $pdo->prepare("DELETE FROM notes WHERE unique_link = ?");
             $deleteStmt->execute([$link]);
         } else {
-            echo json_encode(['error' => 'Note not found.']);
+            echo json_encode(['error' => 'Notiz nicht gefunden.']);
         }
 
         exit;
@@ -53,11 +52,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sichere Einmal-Notiz</title>
-    <!-- Update with sources-->
     <script src="js/crypto-js.js"></script>
     <link href="css/tailwind.min.css" rel="stylesheet">
 </head>
 <style>
+    #picTag {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
     #loadingIndicator {
         padding-top: 2em;
         justify-content: center !important;
@@ -97,12 +101,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="checkFileSize(this)" />
                 <label for="fileInput"
                     class="cursor-pointer bg-blue-500 text-white px-4 text-sm rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Choose image
+                    Bild auswählen
                 </label>
-                <span id="selectedFileName" class="text-gray-600 text-sm">no image selected</span>
+                <span id="selectedFileName" class="text-gray-600 text-sm">Kein Bild ausgewählt</span>
             </div>
             <button onclick="saveNote()" id="saveNoteButton"
-                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Safe note</button>
+                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Notiz
+                speichern</button>
             <div id="loadingIndicator" style="display: none;">
                 <div class="loader"></div>
             </div>
@@ -111,22 +116,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         <div id="linkDisplay" style="display: none;">
             <input type="text" id="generatedLink" class="w-full p-3 border rounded mb-4" readonly>
-            <button onclick="copyLink()" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">copy link</button>
+            <button onclick="copyLink()" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Link
+                kopieren</button>
         </div>
 
         <div id="noteAction" style="display: none;">
-            <button onclick="showNote()" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">View and delete note</button>
+            <button onclick="showNote()" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Notiz
+                anzeigen und löschen</button>
         </div>
 
         <div id="noteDisplay" style="display: none;">
-            <div class="mb-4 font-bold text-blue-400">Content of note</div>
+            <div class="mb-4 font-bold text-blue-400">Inhalt der Nachricht:</div>
             <div id="decryptedNote" class="mb-4 font-bold"></div>
             <img style="display: none;" id="picTag" src="" height=100>
         </div>
 
         <div id="backToStart" style="display: none;">
             <button onclick="redirectToPrivnote()"
-                class="bg-blue-500 hover:bg-blue-600 mt-5 text-white py-2 px-4 rounded">to startpage</button>
+                class="bg-blue-500 hover:bg-blue-600 mt-5 text-white py-2 px-4 rounded">zur Startseite</button>
         </div>
 
         <div id="errorInfo" class="pt-10" style="display: none;">
@@ -134,28 +141,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 existiert</div>
         </div>
 
-        <!-- Info Button and Info-Windows -->
-        <button id="infoButton" class="mt-5 hover:text-blue-800 font-bold text-gray-400 mb-4" onclick="toggleInfo()">How does it work?</button>
+        <!-- Info Button und Info-Fenster -->
+        <button id="infoButton" class="mt-5 hover:text-blue-800 font-bold text-gray-400 mb-4" onclick="toggleInfo()">Wie
+            geht das?</button>
 
         <div id="infoBox" class="border p-4 mb-4 rounded bg-gray-100" style="display: none;">
-            <h2 class="font-bold mb-2">How does it work?</h2>
+            <h2 class="font-bold mb-2">Wie funktioniert das?</h2>
             <p>
-            The system allows the generation of a note that can be viewed only once. Immediately after
-                the note is encrypted before it is sent to the server. The
-                decryption key is not known to the server at any time. This ensures that no person,
-                including server administrators, has access to the decrypted content of the note.
+                Das System erlaubt die Generierung einer Notiz, die nur ein einziges Mal einsehbar ist. Unmittelbar nach
+                ihrer Erstellung wird die Notiz verschlüsselt, ehe sie an den Server übermittelt wird. Der
+                Entschlüsselungs-Key ist dem Server zu keiner Zeit bekannt. Dies stellt sicher, dass keine Person,
+                einschließlich Serveradministratoren, Zugriff auf den entschlüsselten Inhalt der Notiz hat.
             </p>
             <p class="mt-2">
-            When the provided link is accessed and the ad button is clicked, the note will be
-                is retrieved and immediately deleted from the server. Since the decryption key is known only in the user's original
-                only known in the user's original browser, only that browser can decrypt and display the note. On this
-                No cookies are used on this page. If the link provided is lost, there is absolutely no way to recover the note.
-                there is absolutely no way to recover or restore the note
-                or to
-                decrypt it.
+                Wenn der bereitgestellte Link aufgerufen und auf den Anzeigen-Button geklickt wird, wird die Notiz
+                abgerufen und sofort vom Server gelöscht. Da der Schlüssel zur Entschlüsselung nur im ursprünglichen
+                Browser des Benutzers bekannt ist, kann nur dieser die Notiz entschlüsseln und anzeigen. Auf dieser
+                Seite werden keinerlei Cookies verwendet. Sollte der bereitgestellte Link verloren gehen, gibt es
+                absolut keine Möglichkeit, die Notiz wiederherzustellen
+                oder zu
+                entschlüsseln.
             </p>
             <button class="bg-red-500 hover:bg-red-600 text-white py-1 px-2 mt-4 rounded"
-                onclick="toggleInfo()">Close</button>
+                onclick="toggleInfo()">Schließen</button>
         </div>
 
 
@@ -171,7 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 document.getElementById('noteAction').style.display = "block";
             }
             else if (urlParams.has('link') && !keyFragment) {
-                document.getElementById('errorInfo').innerHTML = "<div class=\"mb-4 font-bold text-red-400\">Fehler: Der Schlüssel wurde nicht bereitgestellt.</div>";
+                document.getElementById('errorInfo').innerHTML = "<div class=\"mb-4 font-bold text-red-400\">Fehler: Der Schlüssel wurde nicht bereitgestellt.</div>";        
                 document.getElementById('errorInfo').style.display = "block";
                 document.getElementById('noteAction').style.display = "none";
             }
@@ -209,7 +217,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         function showNote() {
             let link = new URLSearchParams(window.location.search).get('link');
             let key = window.location.hash.substring(1);
-            if (key) { // Check if key is submitted
+            if (key) { // Überprüfe ob der Key vorhanden ist
                 let xhr = new XMLHttpRequest();
                 xhr.open("POST", "index.php", true);
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -242,15 +250,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 };
                 xhr.send("linkToFetch=" + link);
             } else {
-                // if no key...
-                document.getElementById('errorInfo').innerHTML = "<div class=\"mb-4 font-bold text-red-400\">Error... something with key...</div>";
+                // Fehlerbehandlung, falls kein Schlüssel im Fragment vorhanden ist.
+                document.getElementById('errorInfo').innerHTML = "<div class=\"mb-4 font-bold text-red-400\">Fehler: Mit dem Key passt was nicht....</div>";
                 document.getElementById('errorInfo').style.display = "block";
             }
         }
 
         function redirectToPrivnote() {
-            //your start page including http(s)://
-            window.location.href = "<YOUR START PAGE>";
+            window.location.href = "https://privnote.felixma.de";
         }
 
         function copyLink() {
@@ -301,23 +308,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }, false);
 
 
-        //to attache image
+        //Zum anhängen des bildes
         document.getElementById('fileInput').addEventListener('change', function () {
             const fileName = this.files[0] ? this.files[0].name : 'Keine Datei ausgewählt';
             document.getElementById('selectedFileName').textContent = fileName;
         });
 
-        //really an image?
+        //ist das wirklich ein Bild?
         const fileInput = document.getElementById('fileInput');
         fileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file.type.startsWith('image/')) {
                 alert('Bitte laden Sie nur Bilddateien hoch.');
-                event.target.value = '';
+                event.target.value = '';  // Löscht die Auswahl
             }
         });
 
-        //not bigger than 30 mB
+        //nicht größer als 30 MB
         function checkFileSize(input) {
             if (input.files && input.files[0]) {
                 const fileSize = input.files[0].size / 1024 / 1024;
