@@ -1,6 +1,6 @@
 CREATE TABLE `notes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `note_content` text NOT NULL,
+  `note_content` longtext NOT NULL,
   `unique_link` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
